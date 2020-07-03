@@ -66,14 +66,10 @@ function initialize(passport) {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_SECRET,
         callbackURL: process.env.GOOGLE_CALLBACK_URL + "/auth/google/development",
-        scope: [
-            'https://www.googleapis.com/auth/userinfo.profile',
-            'profile',
-            'https://www.googleapis.com/auth/plus.login',
-            'https://www.googleapis.com/auth/userinfo.email'],
+        userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
         },
         function(accessToken, refreshToken, profile, cb) {
-        user = {... profile }
+        //user = {... profile }
         //processGoogleUser(user.displayName, user.id);
         return cb(null, profile);
         }
