@@ -14,7 +14,7 @@ router.get("/test", (req, res) => {
 
 //GOOGLE LOGIN
 router.get('/auth/google',
-    passport.authenticate('google', { scope: ['openid'] }));
+    passport.authenticate('google', { scope: ['openid', 'https://www.googleapis.com/auth/userinfo.profile'] }));
 
 router.get('/auth/google/development',
     passport.authenticate('google', { failureRedirect: '/passport-error' }),
