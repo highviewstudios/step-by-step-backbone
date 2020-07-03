@@ -14,7 +14,7 @@ router.get("/test", (req, res) => {
 
 //GOOGLE LOGIN
 router.get('/auth/google',
-    passport.authenticate('google', { scope: ['openid'] }));
+    passport.authenticate('google', { scope: ['openid', 'email'] }));
 
 router.get('/auth/google/development',
     passport.authenticate('google', { failureRedirect: '/passport-error' }),
@@ -23,7 +23,8 @@ router.get('/auth/google/development',
       const json = {
         error: "null",
         message: "Logged in successfully", 
-        name: req.user.displayName,
+        id: req.user.id,
+        email: req.user.emails[0].value,
         auth: req.isAuthenticated()
         }
     console.log(json);
