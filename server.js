@@ -26,6 +26,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
+app.get('/administrator', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
 //ROUTE FILES
 const userLogin = require('./routes/userLogin');
 app.use(userLogin);
