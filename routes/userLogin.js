@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const mysql = require("mysql");
 
 const router = express.Router();
 
@@ -10,6 +11,41 @@ router.get("/test", (req, res) => {
         outcome: "sucess"
     }
     res.send(json);
+});
+
+const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME
+});
+
+connection.connect(err => {
+    if(err) {
+        return err;
+    }
+});
+
+//Checks a user is Authenticated
+router.get("/auth", async function(req, res) {
+    if(req.isAuthenticated()) {
+        
+        const userDetails = await GetUserByID(req.user);
+        
+        const json = {
+            through: "YES",
+            auth: true,
+            user: userDetails 
+        }
+        
+        res.send(json);
+} else {
+    const json = {
+        through: "yes",
+        auth: false, 
+    }
+    res.send(json);
+}
 });
 
 router.get("/login", function(req, res, next) { 
@@ -97,5 +133,26 @@ router.get("/passport-error", (req, res) => {
     const json = {error: "passport failure redirect"};
     res.send(json);
 });
+
+//FUNCTIONS
+
+//Works alongside the '/auth' route
+function GetUserByID(id) {
+    return new Promise ((resolve, reject) => {
+    
+        const data = {id: id}
+        const FIND_QUERY = "SELECT * FROM users WHERE ?";
+
+        connection.query(FIND_QUERY, data, (err, result) => {
+            if(err) {
+                console.log(err);
+                reject();
+            } else {
+                resolve(result[0]);
+            }
+        });
+        })
+    
+}
 
 module.exports = router;
