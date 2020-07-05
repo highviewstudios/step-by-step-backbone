@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const passport = require('passport');
+const cookieSession = require('cookie-session');
 
 const initialisePassport = require('./passport/passport-config');
 initialisePassport(passport);
@@ -9,7 +10,12 @@ initialisePassport(passport);
 const app = express();
 app.use(express.static(path.join(__dirname, 'build')));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1, key2']
+}));
 app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/ping', (req, res) => {
     res.send('pong');
