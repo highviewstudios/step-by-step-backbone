@@ -42,7 +42,7 @@ function SignIn() {
         </form>
         <a href="http://localhost:8080/auth/google">Sign In With Google</a>
         <Link to="/register">
-          <p>Register</p>
+          <p><a>Register</a></p>
         </Link>
         </div>
     )

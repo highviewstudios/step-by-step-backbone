@@ -134,6 +134,16 @@ router.get("/passport-error", (req, res) => {
     res.send(json);
 });
 
+//FORCE LOG OUT
+router.get("/f/logout", (req, res) => {
+    req.logOut();
+    const json = {
+        error: "null",
+        message: "User logged out"
+    }
+    res.send(json);
+})
+
 //FUNCTIONS
 
 //Works alongside the '/auth' route
