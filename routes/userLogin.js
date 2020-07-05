@@ -12,6 +12,31 @@ router.get("/test", (req, res) => {
     res.send(json);
 });
 
+router.get("/login", function(req, res, next) { 
+
+    passport.authenticate('local', function (err, user, info) {
+    if(err) {
+        const json = {
+            error: err,
+        }
+        res.send(json);
+    } else {
+        if(!user) {
+            res.send({...user, message: "Login unsuccessful", info: info.message});
+        } else {
+            req.login(user, function(error) {
+                if(error) {
+                    return res.status(500).json({
+                        message: "oops, something happed",
+                    });
+                }
+                return res.json({...user, message: "Logged in successful"});
+            });
+        }
+    }
+})(req, res, next);
+});
+
 //GOOGLE LOGIN
 router.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] }));

@@ -69,7 +69,7 @@ function initialize(passport) {
         userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
         },
         function(accessToken, refreshToken, profile, cb) {
-        //user = {... profile }
+        user = {... profile }
         //processGoogleUser(user.displayName, user.id);
         return cb(null, profile);
         }
