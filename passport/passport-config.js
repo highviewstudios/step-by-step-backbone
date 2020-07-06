@@ -70,7 +70,7 @@ function initialize(passport) {
         },
         function(accessToken, refreshToken, profile, cb) {
         user = {... profile }
-        //processGoogleUser(user.displayName, user.id);
+        processGoogleUser(user.displayName, user.id);
         return cb(null, profile);
         }
     ));
