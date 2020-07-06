@@ -50,6 +50,30 @@ router.get("/auth", async function(req, res) {
 }
 });
 
+// Admin - check if user is authenticated and has permission
+router.get("/administrator/auth", (req, res) => {
+    if(req.isAuthenticated()) {
+        if(req.user != process.env.ADMIN_ID) {
+            const json = {
+                auth: true,
+                access: "denied"
+            }
+            res.send(json);
+        } else {
+            const json = {
+                auth: true,
+                access: "granted"
+            }
+            res.send(json);
+        }
+    } else {
+        const json = {
+            auth: false
+        }
+        res.send(json);
+    }
+});
+
 router.get("/login", function(req, res, next) { 
 
     passport.authenticate('local', function (err, user, info) {
@@ -113,8 +137,8 @@ router.get("/auth/github/development",
             //Log action into database
             const date = new Date().toLocaleString('en-GB', {timeZone: 'UTC'});
             //logAdminAction(date, 'Logged into the admin area');
-            res.send(json);
-            //res.redirect("http://localhost:3000/administrator");
+            //res.send(json);
+            res.redirect("/administrator");
         } else {
             const json = {
                 error: "null",
@@ -125,8 +149,8 @@ router.get("/auth/github/development",
             //Log action into database
             const date = new Date().toLocaleString('en-GB', {timeZone: 'UTC'});
             //logAdminAction(date, 'Unauthorised login attempted into the admin area');
-            res.send(json);
-            //res.redirect("http://localhost:3000/administrator");
+            //res.send(json);
+            res.redirect("/administrator");
         }
     }
 );
@@ -146,6 +170,16 @@ router.get("/logout", (req, res) => {
         message: "User logged out"
     }
     res.redirect("/");
+});
+
+//LOG OUT OF ADMINISTRATOR
+router.get("/administrator/logout", (req, res) => {
+    req.logOut();
+    const json = {
+        error: "null",
+        message: "User logged out"
+    }
+    res.redirect("/administrator");
 });
 
 //FORCE LOG OUT

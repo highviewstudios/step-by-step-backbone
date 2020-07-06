@@ -65,7 +65,7 @@ function initialize(passport) {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL + "/auth/google/development",
+        callbackURL: process.env.HOST_CALLBACK_URL + "/auth/google/development",
         userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
         },
         function(accessToken, refreshToken, profile, cb) {
@@ -80,7 +80,7 @@ function initialize(passport) {
     passport.use(new GithubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: "https://react-development.high-view-studios.co.uk/auth/github/development"
+    callbackURL: process.env.HOST_CALLBACK_URL + "/auth/github/development"
     },
     function(accessToken, refreshToken, profile, cb) {
         user = {... profile}
