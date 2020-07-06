@@ -1,9 +1,14 @@
 import React, { useContext } from 'react';
 import { AdminContext } from '../../context/adminContext';
+import ServerPath, { hostPath } from "../ServerPath";
 
 function SignIn() {
 
     const { user } = useContext(AdminContext);
+
+    useEffect(() => {
+        ServerPath();
+    },[])
 
     return (
         <div>
@@ -11,10 +16,10 @@ function SignIn() {
         {user.granted == "denied" ? (
             <div>
             <h1>Access Denied</h1>
-            <a href="http://localhost:8080/administrator/logout">Log Out</a>
+            <a href= {hostPath + "/administrator/logout"}>Log Out</a>
             </div>
         ):(
-            <a href="http://localhost:8080/auth/github">Sign In With GitHub</a>
+            <a href="/auth/github">Sign In With GitHub</a>
             )}
         </div>
     )
