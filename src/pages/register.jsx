@@ -29,7 +29,6 @@ function Register() {
         const confirmpassword = document.getElementById("confirmpassword").value;
         
         const url = "/register/"+ name +"/"+ email +"/"+ password +"/"+ confirmpassword;
-        
         axios.get(url)
         .then(res => {
             if(res.data.message === "User registered successfully") {

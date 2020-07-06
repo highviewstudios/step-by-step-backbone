@@ -1,6 +1,8 @@
 const express = require('express');
 const passport = require('passport');
 const mysql = require("mysql");
+const { uuid } = require('uuidv4');
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -154,9 +156,98 @@ router.get("/f/logout", (req, res) => {
         message: "User logged out"
     }
     res.send(json);
-})
+});
+
+//REGISTER
+router.get("/register/:name/:email/:password/:confirmPassword", async (req, res) => {
+    console.log("There's a hit!");
+    try {
+            const name = req.params.name;
+            const email = req.params.email;
+            const password = req.params.password;
+            const confirmPassword = req.params.confirmPassword;
+            const uid = uuid();
+            
+            if(/^[a-zA-Z0-9- ]*$/.test(name) == false) 
+            {
+                const json = {
+                    error: "null",
+                    userError: "Yes",
+                    message: "You cannot have any special characters in your name"
+                }
+                res.send(json);
+            } else if (!ValidateEmail(email)) {
+                const json = {
+                    error: "null",
+                    userError: "Yes",
+                    message: "The email address you have provided is not valid"
+                }
+                res.send(json);
+            } else if (!ValidatePassword(password)) {
+                const json = {
+                    error: "null",
+                    userError: "Yes",
+                    message: "Your password is not strong enough"
+                }
+                res.send(json);
+            } else if(confirmPassword != password){
+                const json = {
+                    error: "null",
+                    userError: "Yes",
+                    message: "Your passwords do not match"
+                }
+                res.send(json);
+            } else {
+                console.log("Registering...");
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const data = {id: uid, strategy: "local", displayName: name, email: email, password: hashedPassword}
+                const INSERT_QUERY = "INSERT INTO users SET ?";
+                connection.query(INSERT_QUERY, data, (err) => {
+                    if(err) {
+                        console.error(err);
+                    } else {
+                        const json = {
+                            error: "null",
+                            userError: "null",
+                            message: "User registered successfully"
+                        }
+                        res.send(json);
+                    }
+                })}            
+    } catch(e) {
+        console.log(e);
+    }
+    //console.log(users);
+});
 
 //FUNCTIONS
+
+function ValidateEmail(mail) 
+{
+if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail))
+{
+    return (true)
+}
+    return (false)
+}
+
+function ValidatePassword(password) {
+    let check = true;
+    
+    if(password.length <= 8) {
+        check = false;
+    } else if(!/[a-z]/.test(password)) {
+        check = false;
+    } else if(!/[A-Z]/.test(password)){
+        check = false;
+    } else if(!/\d/.test(password)) {
+        check = false;
+    } else if(!password.match(/[!@#$%^&*()]/)) {
+        check = false;
+    }
+    
+    return check;
+}
 
 //Works alongside the '/auth' route
 function GetUserByID(id) {
