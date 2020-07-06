@@ -1,7 +1,13 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { UserContext } from '../context/userContext';
+import ServerPath, { hostPath } from "../ServerPath";
 
 function Home() {
+
+    useEffect(() => {
+        ServerPath();
+        console.log("HostPath: " + hostPath);
+    },[])
     
     const { user } = useContext(UserContext)
 
@@ -9,7 +15,7 @@ function Home() {
         <div>
             <h1>Home Page</h1>
             <h2>{user.name}</h2>
-            <a href="http://localhost:8080/logout">Sign Out</a>
+            <a href= {hostPath + "/logout"}>Sign Out</a>
         </div>
     )
 }

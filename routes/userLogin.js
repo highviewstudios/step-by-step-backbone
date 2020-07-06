@@ -136,12 +136,13 @@ router.get("/passport-error", (req, res) => {
 
 //LOG OUT OF USER
 router.get("/logout", (req, res) => {
+    console.log("LO");
     req.logOut();
     const json = {
         error: "null",
         message: "User logged out"
     }
-    res.redirect("http://localhost:3000/");
+    res.redirect("/");
 });
 
 //FORCE LOG OUT
