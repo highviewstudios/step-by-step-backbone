@@ -134,6 +134,16 @@ router.get("/passport-error", (req, res) => {
     res.send(json);
 });
 
+//LOG OUT OF USER
+router.get("/logout", (req, res) => {
+    req.logOut();
+    const json = {
+        error: "null",
+        message: "User logged out"
+    }
+    res.redirect("http://localhost:3000/");
+});
+
 //FORCE LOG OUT
 router.get("/f/logout", (req, res) => {
     req.logOut();
