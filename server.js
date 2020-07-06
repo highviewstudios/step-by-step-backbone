@@ -26,18 +26,14 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
-
-//app.get('/administrator', (req, res) => {
-    //res.sendFile(path.join(__dirname, 'build', 'index.html'));
-//});
-
 //ROUTE FILES
 const userLogin = require('./routes/userLogin');
 app.use(userLogin);
 
+//ROUTE THAT ACCESSES OTHER COMPONENTS IN REACT - NEEDS TO GO BELOW EVERY OTHER ROUTE
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.listen(process.env.PORT || 8080, () => {
     console.log("Listening on port 8080");
