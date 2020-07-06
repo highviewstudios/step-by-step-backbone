@@ -88,7 +88,8 @@ router.get('/auth/google/development',
         auth: req.isAuthenticated()
         }
     console.log(json);
-    res.send(json);
+    res.redirect("/");
+    //res.send(json);
 });
 
 //GITHUB LOGIN
