@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useHistory, Link } from 'react-router-dom';
+import ServerPath, { hostPath } from "../ServerPath";
 
 function SignIn() {
 
@@ -8,6 +9,7 @@ function SignIn() {
     const [message, setmessage] = useState('');
 
     useEffect(() => {
+        ServerPath();
     },[]);
 
     function handleClick(event) {
@@ -40,7 +42,7 @@ function SignIn() {
             <button onClick={handleClick}>LogIn</button>
             <p>{message}</p>
         </form>
-        <a href="http://localhost:8080/auth/google">Sign In With Google</a>
+        <a href= {hostPath + "/auth/google"}>Sign In With Google</a>
         <Link to="/register">
           <p>Register</p>
         </Link>

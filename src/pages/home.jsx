@@ -6,7 +6,6 @@ function Home() {
 
     useEffect(() => {
         ServerPath();
-        console.log("HostPath: " + hostPath);
     },[])
     
     const { user } = useContext(UserContext)
