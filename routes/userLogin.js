@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const passport = require('passport');
 const mysql = require("mysql");
 const { uuid } = require('uuidv4');
 const bcrypt = require('bcrypt');
+const generatePass = require('generate-password');
 
 const router = express.Router();
 
@@ -32,15 +34,26 @@ connection.connect(err => {
 router.get("/auth", async function(req, res) {
     if(req.isAuthenticated()) {
         
-        const userDetails = await GetUserByID(req.user);
-        
-        const json = {
-            through: "YES",
-            auth: true,
-            user: userDetails 
+        if(req.user == process.env.ADMIN_ID) {
+            const json = {
+                through: "YES",
+                auth: true,
+                role: "superAdmin",
+            }
+            res.send(json);
+        } else {
+
+            const userDetails = await GetUserByID(req.user);
+            const json = {
+                through: "YES",
+                auth: true,
+                role: "user",
+                user: userDetails 
+            }
+            res.send(json);
         }
         
-        res.send(json);
+        
 } else {
     const json = {
         through: "yes",
@@ -92,7 +105,7 @@ router.get("/login", function(req, res, next) {
                         message: "oops, something happed",
                     });
                 }
-                return res.json({...user, message: "Logged in successful"});
+                return res.json({...user, role: "user", message: "Logged in successful"}); //NEEDS CHANGING WHEN ADDING ROLE TO DATABASE
             });
         }
     }
@@ -114,8 +127,8 @@ router.get('/auth/google/development',
         auth: req.isAuthenticated()
         }
     console.log(json);
-    res.redirect("/");
-    //res.send(json);
+    //res.redirect(process.env.REDIRECT_URL);
+    res.send(json);
 });
 
 //GITHUB LOGIN
@@ -138,7 +151,7 @@ router.get("/auth/github/development",
             const date = new Date().toLocaleString('en-GB', {timeZone: 'UTC'});
             //logAdminAction(date, 'Logged into the admin area');
             //res.send(json);
-            res.redirect("/administrator");
+            res.redirect(process.env.REDIRECT_URL);
         } else {
             const json = {
                 error: "null",
@@ -150,7 +163,7 @@ router.get("/auth/github/development",
             const date = new Date().toLocaleString('en-GB', {timeZone: 'UTC'});
             //logAdminAction(date, 'Unauthorised login attempted into the admin area');
             //res.send(json);
-            res.redirect("/administrator");
+            res.redirect(process.env.REDIRECT_URL);
         }
     }
 );
@@ -169,7 +182,7 @@ router.get("/logout", (req, res) => {
         error: "null",
         message: "User logged out"
     }
-    res.redirect("/");
+    res.send(json);
 });
 
 //LOG OUT OF ADMINISTRATOR
@@ -254,6 +267,213 @@ router.get("/register/:name/:email/:password/:confirmPassword", async (req, res)
     //console.log(users);
 });
 
+//TEST REGISTER POST
+router.post("/registerPost", async (req, res) => {
+    
+    const orgName = req.body.orgName;
+    const orgRooms = req.body.orgRooms;
+    const authLocal = req.body.authLocal;
+    const authGoogle = req.body.authGoogle;
+    const pName = req.body.pName;
+    const pEmail = req.body.pEmail;
+    
+    // console.log(orgName + '/' + orgRooms + '/' + authLocal + '/' + authGoogle + '/' + pName + '/' + pEmail)
+
+    if(!ValidateNumber(orgRooms)) {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "The allocated rooms can only contain numbers"
+        }
+        res.send(json);
+    } else if(!ValidateEmail(pEmail)) {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "The email address you have provided is not valid"
+        }
+        res.send(json);
+    }else if(authLocal == 'false' && authGoogle == 'false') {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "Please select a login option"
+        }
+        res.send(json);
+    }else {
+        
+        const user = await GetUserByEmail(pEmail);
+        
+        if(user != null) {
+            const json = {
+                error: "null",
+                userError: "Yes",
+                message: "The email address you have provided has already been used"
+            }
+            res.send(json);
+        }
+        else {
+            try {
+                // console.log("HERE!!");
+                const password = generatePass.generate({length: 10, numbers: true, uppercase: true});
+                const orgID = generatePass.generate({length: 10, numbers: true, uppercase: false, lowercase: false, symbols: false});
+
+                const resultOrg = await addOrganisation(orgName, orgRooms, authLocal, authGoogle, pName, pEmail, orgID);
+                const resultUser = await addUser(pName, pEmail, authLocal, password, authGoogle, "seniorAdmin", orgID);
+        
+                if(resultOrg == "Success" && resultUser == "Success") {
+
+                    //Send email
+                    let mailOptions = {
+                        from: '"My STAFF" <staff-development@high-view-studios.co.uk>', // sender address
+                        to: pEmail, // list of receivers
+                        subject: "Welcome to My STAFF", // Subject line
+                        template: 'organisationReg',
+                        context: {
+                            name: pName,
+                            email: pEmail,
+                            orgName: orgName,
+                            authLocal: authLocal,
+                            authGoogle: authGoogle,
+                            localPassword: password,
+                            orgID: orgID
+                        }
+                    };
+                    //send mail with defined transport object
+                    // email.mail.sendMail(mailOptions, (error, info) => {
+                    //     if(error) {
+                    //         return console.log(error);
+                    //     }
+                    // console.log("Message sent: %s", info.messageId);
+                    // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
+                    // console.log("Email has been sent");
+                    // });
+
+                    const json = {
+                        error: "null",
+                        userError: "null",
+                        message: "Successfully added"
+                    }
+                    res.send(json);
+                } else {
+                    const json = {
+                        error: "YES",
+                        userError: "null",
+                        message: "There was an error"
+                    }
+                    res.send(json);
+                } 
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            }
+    }
+});
+
+router.get('/administrator/addOrganisation/:orgName/:orgRooms/:authLocal/:authGoogle/:pName/:pEmail', async (req, res) => {
+    
+    const orgName = req.params.orgName;
+    const orgRooms = req.params.orgRooms;
+    const authLocal = req.params.authLocal;
+    const authGoogle = req.params.authGoogle;
+    const pName = req.params.pName;
+    const pEmail = req.params.pEmail;
+
+    if(!ValidateNumber(orgRooms)) {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "The allocated rooms can only contain numbers"
+        }
+        res.send(json);
+    } else if(!ValidateEmail(pEmail)) {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "The email address you have provided is not valid"
+        }
+        res.send(json);
+    }else if(authLocal == 'false' && authGoogle == 'false') {
+        const json = {
+            error: "null",
+            userError: "Yes",
+            message: "Please select a login option"
+        }
+        res.send(json);
+    }else {
+        
+        const user = await GetUserByEmail(pEmail);
+
+        if(user != null) {
+            const json = {
+                error: "null",
+                userError: "Yes",
+                message: "The email address you have provided has already been used"
+            }
+            res.send(json);
+        }
+        else {
+            try {
+                const password = generatePass.generate({length: 10, numbers: true, uppercase: true});
+                const orgID = generatePass.generate({length: 10, numbers: true, uppercase: false, lowercase: false, symbols: false});
+
+                const resultOrg = await addOrganisation(orgName, orgRooms, authLocal, authGoogle, pName, pEmail, orgID);
+                const resultUser = await addUser(pName, pEmail, authLocal, password, authGoogle, "seniorAdmin", orgID);
+        
+                if(resultOrg == "Success" && resultUser == "Success") {
+
+                    //Send email
+                    let mailOptions = {
+                        from: '"My STAFF" <staff-development@high-view-studios.co.uk>', // sender address
+                        to: pEmail, // list of receivers
+                        subject: "Welcome to My STAFF", // Subject line
+                        template: 'organisationReg',
+                        context: {
+                            name: pName,
+                            email: pEmail,
+                            orgName: orgName,
+                            authLocal: authLocal,
+                            authGoogle: authGoogle,
+                            localPassword: password,
+                            orgID: orgID
+                        }
+                    };
+                    //send mail with defined transport object
+                    // email.mail.sendMail(mailOptions, (error, info) => {
+                    //     if(error) {
+                    //         return console.log(error);
+                    //     }
+                    // console.log("Message sent: %s", info.messageId);
+                    // console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
+                    // console.log("Email has been sent");
+                    // });
+
+                    const json = {
+                        error: "null",
+                        userError: "null",
+                        message: "Successfully added"
+                    }
+                    res.send(json);
+                } else {
+                    const json = {
+                        error: "YES",
+                        userError: "null",
+                        message: "There was an error"
+                    }
+                    res.send(json);
+                } 
+                }
+                catch (err) {
+                    console.log(err);
+                }
+            }
+    }
+
+});
+
 //FUNCTIONS
 
 function ValidateEmail(mail) 
@@ -263,6 +483,16 @@ if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail))
     return (true)
 }
     return (false)
+}
+
+function ValidateNumber(number) 
+{
+    if (!/[0-9]/.test(number))
+    {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 function ValidatePassword(password) {
@@ -283,6 +513,23 @@ function ValidatePassword(password) {
     return check;
 }
 
+function GetUserByEmail(email) {
+    return new Promise ((resolve, reject) => {
+    
+        const data = {email: email}
+        const FIND_QUERY = "SELECT * FROM users WHERE ?";
+
+        connection.query(FIND_QUERY, data, (err, result) => {
+            if(err) {
+                console.log(err);
+                reject();
+            } else {
+                resolve(result[0]);
+            }
+        });
+        })
+}
+
 //Works alongside the '/auth' route
 function GetUserByID(id) {
     return new Promise ((resolve, reject) => {
@@ -300,6 +547,47 @@ function GetUserByID(id) {
         });
         })
     
+}
+
+function addOrganisation(orgName, orgRooms, authLocal, authGoogle, pName, pEmail, orgID) {
+
+    return new Promise ((resolve, reject) => {
+       
+        const data = {name: orgName, POC_Name: pName, POC_Email: pEmail, auth_Local: authLocal, auth_Google: authGoogle, allocatedRooms: orgRooms, orgID: orgID};
+        const query = "INSERT INTO organisations SET ?";
+        connection.query(query, data, (err) => {
+            if(err) {
+                reject();
+            } else {
+                resolve("Success");
+            }
+        });
+    });
+    
+}
+
+function addUser(name, email, authLocal, localPassword, authGoogle, role, orgID) {
+    return new Promise(async (resolve, reject) => {
+
+        const uid = uuid();
+        let hashedPassword = ''; 
+        if(authLocal == "true") {
+            hashedPassword = await bcrypt.hash(localPassword, parseInt(process.env.SALT));
+        }
+
+        const data = {id: uid, displayName: name, email: email, password: hashedPassword, requestedPassword: 'false', new: "true", role: role, orgID: orgID}
+        const query = "INSERT users SET ?";
+        connection.query(query, data, (err, result) => {
+            if(err) {
+                console.log(err);
+                reject();
+            } else {
+                resolve("Success");
+            }
+        })
+
+
+    });
 }
 
 module.exports = router;

@@ -10,9 +10,10 @@ initialisePassport(passport);
 const app = express();
 app.use(express.static(path.join(__dirname, 'build')));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json()); //NEED THIS AS WELL AS THE LINE ABOVE TO RECIEVE DATA FROM REACT USING AXIOS
 app.use(cookieSession({
     name: 'session',
-    keys: ['key1, key2']
+    keys: ['key1, key2'],
 }));
 app.use(passport.initialize());
 app.use(passport.session());
